@@ -1,7 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Million.PropertyManagement.Application.Automapper;
+using Million.PropertyManagement.Application.Dtos.Property;
 using Million.PropertyManagement.Application.Services;
 using Million.PropertyManagement.Application.Services.Interfaces;
+using Million.PropertyManagement.Application.Strategies;
+using Million.PropertyManagement.Application.Strategies.Interfaces;
 using Million.PropertyManagement.Domain.Interfaces;
 using Million.PropertyManagement.Infrastructure.Repositories;
 using Million.PropertyManagement.Infrastructure.Security;
@@ -26,6 +29,8 @@ namespace Million.PropertyManagement.Application.DependencyInjection
             services.AddScoped<IPasswordHasher, PasswordHasher>();
 
             services.AddScoped<IPropertyImageRepository, PropertyImageRepository>();
+            services.AddScoped<IPropertyFilterStrategy, NameFilterStrategy>();
+            services.AddScoped<IPropertyFilterStrategy, PriceFilterStrategy>();            
 
             return services;
         }

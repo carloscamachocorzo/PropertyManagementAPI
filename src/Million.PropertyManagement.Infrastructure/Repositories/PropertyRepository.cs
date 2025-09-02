@@ -57,6 +57,10 @@ namespace Million.PropertyManagement.Infrastructure.Repositories
                          .Take(pageSize);
             return await query.AsNoTracking().ToListAsync();
         }
-        
+        public IQueryable<Property> GetAll()
+        {
+            return _context.Property.AsQueryable();
+        }
+
     }
 }

@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Million.PropertyManagement.Application.Dtos.Property;
 using Million.PropertyManagement.Application.Services.Interfaces;
+using Million.PropertyManagement.Application.Strategies.Interfaces;
 using Million.PropertyManagement.Common;
 using Million.PropertyManagement.Domain.Interfaces;
 using Million.PropertyManagement.Infrastructure;
@@ -17,10 +18,10 @@ namespace Million.PropertyManagement.Application.Services
         private readonly IPropertyRepository _propertyRepository;
         private readonly IMapper _mapper;
         private string className = new StackFrame().GetMethod()?.ReflectedType?.Name ?? "CreatePropertyAppService";
-        private readonly ILogger<PropertyAppService> _logger;
-
+        private readonly ILogger<PropertyAppService> _logger;        
+        private readonly IEnumerable<IPropertyFilterStrategy> _strategies;
         #region Builder
-        
+
         /// <summary>
         /// Inicializa una nueva instancia del servicio de propiedades.
         /// </summary>
@@ -29,11 +30,13 @@ namespace Million.PropertyManagement.Application.Services
         /// <param name="logger">Logger para registrar información y errores.</param>
 
         public PropertyAppService(IPropertyRepository propertyRepository, IMapper mapper,
-             ILogger<PropertyAppService> logger)
+             ILogger<PropertyAppService> logger, 
+             IEnumerable<IPropertyFilterStrategy> strategies)
         {
             _propertyRepository = propertyRepository;
             _mapper = mapper;
-            _logger = logger;
+            _logger = logger; 
+            _strategies = strategies;
         }
         #endregion
 
@@ -111,24 +114,20 @@ namespace Million.PropertyManagement.Application.Services
 
         public async Task<IEnumerable<PropertyDto>> GetPropertiesAsync(PropertyFilterDto filter)
         {
-            // Registrar log los filtros aplicados
-            _logger.LogInformation("Filtros aplicados: Nombre={Name}, Precio Mínimo={MinPrice}, Precio Máximo={MaxPrice}, Año={Year}, Tamaño de página={PageSize}, Número de página={PageNumber}",
-                filter.Name, filter.MinPrice, filter.MaxPrice, filter.Year, filter.PageSize, filter.PageNumber);
+            
+            IQueryable<Property> query = _propertyRepository.GetAll();
 
-            var properties = await _propertyRepository.GetPropertiesWithFiltersAsync(
-            filter.Name, filter.MinPrice, filter.MaxPrice, filter.Year, filter.PageSize, filter.PageNumber);
-
-            // Proyectar entidades a DTO
-            var propertyDtos = properties.Select(p => new PropertyDto
+            foreach (var strategy in _strategies)
             {
-                Name = p.Name,
-                Address = p.Address,
-                Price = p.Price ?? 0,
-                CodeInternal = p.CodeInternal,
-                Year = p.Year ?? 0
-            });
+                query = strategy.Apply(query, filter);
+            }
 
-            return propertyDtos;
+            var entities = query.ToList();
+            var dtos = _mapper.Map<IEnumerable<PropertyDto>>(entities);
+
+            return await Task.FromResult(dtos);
+
+
         }
         #endregion
 

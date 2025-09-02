@@ -31,5 +31,12 @@ namespace Million.PropertyManagement.Domain.Interfaces
         /// <param name="pageNumber">Número de la página a obtener.</param>
         /// <returns>Lista de propiedades que cumplen con los filtros especificados.</returns>
         Task<IEnumerable<Property>> GetPropertiesWithFiltersAsync(string name, decimal? minPrice, decimal? maxPrice, int? year, int pageSize, int pageNumber);
+        /// <summary>
+        /// Obtiene una consulta que representa todas las propiedades disponibles en la base de datos.
+        /// </summary>
+        /// <returns>
+        /// Una consulta <see cref="IQueryable{Property}"/> que contiene todas las propiedades.
+        /// </returns>
+        public IQueryable<Property> GetAll();
     }
 }
