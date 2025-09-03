@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Million.PropertyManagement.Api.SwaggerExamples;
 using Million.PropertyManagement.Application.Dtos.Property;
 using Million.PropertyManagement.Application.Services.Interfaces;
 using Million.PropertyManagement.Common;
+using Swashbuckle.AspNetCore.Filters;
 
 namespace Million.PropertyManagement.Api.Controllers
 {
@@ -37,6 +39,8 @@ namespace Million.PropertyManagement.Api.Controllers
 
         [HttpPost("create")]
         [Authorize]
+        [SwaggerRequestExample(typeof(PropertyDto), typeof(CreatePropertyDtoExample))]
+        [SwaggerResponseExample(StatusCodes.Status200OK, typeof(CreatePropertyResponseDtoExample))]
         public async Task<IActionResult> CreateProperty([FromBody] PropertyDto propertyDto)
         {
             var result = await _propertyAppService.ExecuteAsync(propertyDto);
@@ -171,11 +175,12 @@ namespace Million.PropertyManagement.Api.Controllers
         [HttpGet]
         [Route(nameof(GetPropertiesWithFilters))]
         [Authorize]
+        [SwaggerRequestExample(typeof(PropertyFilterDto), typeof(PropertyFilterDtoExample))]
         public async Task<IActionResult> GetPropertiesWithFilters([FromQuery] PropertyFilterDto filter)
         {
             var properties = await _propertyAppService.GetPropertiesAsync(filter);
 
-            if (!properties.Any()) // Si no se encuentran propiedades
+            if (!properties.Items.Any()) // Si no se encuentran propiedades
             {
                 return NotFound(new Dictionary<string, string> { { "message", "No se encontraron propiedades que coincidan con los filtros aplicados." } });
             }

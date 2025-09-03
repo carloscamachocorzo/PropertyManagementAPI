@@ -112,7 +112,7 @@ namespace Million.PropertyManagement.Application.Services
         }
        
 
-        public async Task<IEnumerable<PropertyDto>> GetPropertiesAsync(PropertyFilterDto filter)
+        public async Task<PagedResult<PropertyDto>> GetPropertiesAsync(PropertyFilterDto filter)
         {
             
             IQueryable<Property> query = _propertyRepository.GetAll();
@@ -122,10 +122,20 @@ namespace Million.PropertyManagement.Application.Services
                 query = strategy.Apply(query, filter);
             }
 
-            var entities = query.ToList();
+            // Total antes de aplicar paginación
+            int totalCount = query.Count();
+
+            // Aplicar paginación
+            var entities = query
+                .Skip((filter.PageNumber - 1) * filter.PageSize)
+                .Take(filter.PageSize)
+                .ToList();
+
             var dtos = _mapper.Map<IEnumerable<PropertyDto>>(entities);
 
-            return await Task.FromResult(dtos);
+            return await Task.FromResult(
+                new PagedResult<PropertyDto>(dtos, totalCount, filter.PageNumber, filter.PageSize)
+            );
 
 
         }

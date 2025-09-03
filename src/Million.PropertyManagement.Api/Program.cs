@@ -2,10 +2,12 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Million.PropertyManagement.Api.SwaggerExamples;
 using Million.PropertyManagement.Application.DependencyInjection;
 using Million.PropertyManagement.Infrastructure.DataAccess.Contexts;
 using NLog;
 using Swashbuckle.AspNetCore.Filters;
+using System.Reflection;
 using System.Text;
 
 namespace Million.PropertyManagement.Api
@@ -55,7 +57,12 @@ namespace Million.PropertyManagement.Api
                         Name = "Carlos Camacho"
                     }
                 });
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
 
+                c.EnableAnnotations();
+                c.ExampleFilters();
                 // Esquema de seguridad para JWT
                 c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
@@ -90,8 +97,11 @@ namespace Million.PropertyManagement.Api
                 c.EnableAnnotations();
                 c.CustomSchemaIds(type => type.FullName);
             });
+            // Registrar automáticamente todos los ejemplos
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<CreatePropertyDtoExample>();
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<CreatePropertyResponseDtoExample>();
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<PropertyFilterDtoExample>();
 
-           
             // Authorization
             var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtSettings:SecretKey"]);
             var keyIssuer = builder.Configuration["JwtSettings:Issuer"];

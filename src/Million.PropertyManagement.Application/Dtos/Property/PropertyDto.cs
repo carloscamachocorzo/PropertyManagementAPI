@@ -23,7 +23,7 @@
         /// <summary>
         /// Obtiene o establece el código interno de la propiedad.
         /// </summary>
-        public string CodeInternal { get; set; }
+        public string? CodeInternal { get; set; }
 
         /// <summary>
         /// Obtiene o establece el año de construcción de la propiedad.
