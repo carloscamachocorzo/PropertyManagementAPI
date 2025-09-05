@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Million.PropertyManagement.Api.Controllers;
 using Million.PropertyManagement.Application.Dtos.Property;
 using Million.PropertyManagement.Application.Services.Interfaces;
+using Million.PropertyManagement.Common;
 using Moq;
 
 namespace Million.PropertyManagement.Tests.Controllers
@@ -23,8 +25,18 @@ namespace Million.PropertyManagement.Tests.Controllers
             };
 
             // Configuramos el mock para que devuelva esta lista cuando se llame con cualquier PropertyFilterDto
+            //mockPropertyAppService.Setup(service => service.GetPropertiesAsync(It.IsAny<PropertyFilterDto>()))
+            //                      .ReturnsAsync(properties);
+            var expectedPagedResult = new PagedResult<PropertyDto>(
+                   properties,
+                   totalCount: properties.Count,
+                   pageNumber: 1,
+                   pageSize: properties.Count
+               );
+
+            mockPropertyAppService = new Mock<IPropertyAppService>();
             mockPropertyAppService.Setup(service => service.GetPropertiesAsync(It.IsAny<PropertyFilterDto>()))
-                                  .ReturnsAsync(properties);
+                                   .ReturnsAsync(expectedPagedResult);
 
             // Creamos una instancia del PropertiesController e inyectamos los mocks
             var controller = new PropertiesController(mockPropertyAppService.Object, mockPropertyImageAppService.Object);
@@ -59,8 +71,23 @@ namespace Million.PropertyManagement.Tests.Controllers
             var mockPropertyImageAppService = new Mock<IPropertyImageAppService>();
 
             // Simulamos que GetPropertiesAsync devuelva una lista vacía
+            //mockPropertyAppService.Setup(service => service.GetPropertiesAsync(It.IsAny<PropertyFilterDto>()))
+            //                      .ReturnsAsync(new List<PropertyDto>());
+            var properties = new List<PropertyDto>
+                {
+                    new PropertyDto {  Name = "Property 1", Price = 100000 },
+                    new PropertyDto {  Name = "Property 2", Price = 200000 }
+                };
+            var expectedPagedResult = new PagedResult<PropertyDto>(
+                   properties,
+                   totalCount: properties.Count,
+                   pageNumber: 1,
+                   pageSize: properties.Count
+               );
+
+            mockPropertyAppService = new Mock<IPropertyAppService>();
             mockPropertyAppService.Setup(service => service.GetPropertiesAsync(It.IsAny<PropertyFilterDto>()))
-                                  .ReturnsAsync(new List<PropertyDto>());
+                                   .ReturnsAsync(expectedPagedResult);
 
             // Creamos una instancia del PropertiesController e inyectamos los mocks
             var controller = new PropertiesController(mockPropertyAppService.Object, mockPropertyImageAppService.Object);
@@ -82,6 +109,44 @@ namespace Million.PropertyManagement.Tests.Controllers
             // Verificamos el contenido del NotFoundObjectResult
             var value = Assert.IsType<Dictionary<string, string>>(notFoundResult.Value); // Convertimos a Dictionary<string, string>
             Assert.Equal("No se encontraron propiedades que coincidan con los filtros aplicados.", value["message"]);
+        }
+
+        [Fact]
+        public async Task GetPropertiesAsync_WithPagination_ReturnsPartialResults()
+        {
+            // Arrange
+            var allProperties = new List<PropertyDto>
+            {
+                new PropertyDto { Name = "Property 1" },
+                new PropertyDto { Name = "Property 2" },
+                new PropertyDto { Name = "Property 3" },
+                new PropertyDto { Name = "Property 4" },
+                new PropertyDto { Name = "Property 5" }
+            };
+
+            var page2Properties = new List<PropertyDto> { allProperties[2], allProperties[3] };
+
+            var expectedPagedResult = new PagedResult<PropertyDto>(
+                page2Properties,
+                totalCount: allProperties.Count,
+                pageNumber: 2,
+                pageSize: 2
+            );
+
+            var mockPropertyAppService = new Mock<IPropertyAppService>();
+            mockPropertyAppService.Setup(service => service.GetPropertiesAsync(It.IsAny<PropertyFilterDto>()))
+                                   .ReturnsAsync(expectedPagedResult);
+
+            // Act
+            var filter = new PropertyFilterDto { PageNumber = 2, PageSize = 2 };
+            var result = await mockPropertyAppService.Object.GetPropertiesAsync(filter);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(2, result.Items.Count());
+            Assert.Equal(5, result.TotalCount);
+            Assert.Equal(2, result.PageNumber);
+            Assert.Equal(2, result.PageSize);
         }
     }
 }
