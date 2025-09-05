@@ -143,6 +143,7 @@ namespace Million.PropertyManagement.Application.Services
 
             var dtos = _mapper.Map<IEnumerable<PropertyDto>>(entities);
 
+
             return await Task.FromResult(
                 new PagedResult<PropertyDto>(dtos, totalCount, filter.PageNumber, filter.PageSize)
             );
