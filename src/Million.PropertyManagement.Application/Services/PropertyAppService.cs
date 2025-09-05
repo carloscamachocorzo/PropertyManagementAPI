@@ -1,9 +1,11 @@
 ﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using Million.PropertyManagement.Application.Dtos.Property;
+using Million.PropertyManagement.Application.Events;
 using Million.PropertyManagement.Application.Services.Interfaces;
 using Million.PropertyManagement.Application.Strategies.Interfaces;
 using Million.PropertyManagement.Common;
+using Million.PropertyManagement.Domain.Events;
 using Million.PropertyManagement.Domain.Interfaces;
 using Million.PropertyManagement.Infrastructure;
 using System.Diagnostics;
@@ -17,9 +19,10 @@ namespace Million.PropertyManagement.Application.Services
     {
         private readonly IPropertyRepository _propertyRepository;
         private readonly IMapper _mapper;
-        private string className = new StackFrame().GetMethod()?.ReflectedType?.Name ?? "CreatePropertyAppService";
+        private readonly string className = new StackFrame().GetMethod()?.ReflectedType?.Name ?? "CreatePropertyAppService";
         private readonly ILogger<PropertyAppService> _logger;        
         private readonly IEnumerable<IPropertyFilterStrategy> _strategies;
+        private readonly IEventDispatcher _eventDispatcher;
         #region Builder
 
         /// <summary>
@@ -31,12 +34,13 @@ namespace Million.PropertyManagement.Application.Services
 
         public PropertyAppService(IPropertyRepository propertyRepository, IMapper mapper,
              ILogger<PropertyAppService> logger, 
-             IEnumerable<IPropertyFilterStrategy> strategies)
+             IEnumerable<IPropertyFilterStrategy> strategies, IEventDispatcher propertyEventDispatcher)
         {
             _propertyRepository = propertyRepository;
             _mapper = mapper;
             _logger = logger; 
             _strategies = strategies;
+            _eventDispatcher = propertyEventDispatcher;
         }
         #endregion
 
@@ -48,6 +52,12 @@ namespace Million.PropertyManagement.Application.Services
                 // Lógica para validar los datos de la propiedad                
                 Property property = _mapper.Map<Property>(propertyDto);
                 await _propertyRepository.AddAsync(property);
+
+                // Disparar evento genérico
+                var propertyCreatedEvent = new PropertyCreatedEvent(property.IdProperty, property.Name);
+                await _eventDispatcher.DispatchAsync(propertyCreatedEvent);
+
+
                 // Devuelve una respuesta exitosa
                 return RequestResult<int>.CreateSuccessful(property.IdProperty, new string[] { "Nueva propiedad creada" });
             }

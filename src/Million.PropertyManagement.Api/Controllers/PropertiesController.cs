@@ -20,7 +20,7 @@ namespace Million.PropertyManagement.Api.Controllers
         /// <summary>
         /// Inicializa una nueva instancia del controlador de propiedades.
         /// </summary>
-        /// <param name="createProperty">Servicio para gestionar propiedades.</param>
+        /// <param name="propertyAppService">Servicio para gestionar propiedades.</param>
         /// <param name="propertyImageAppService">Servicio para gestionar imágenes de propiedades.</param>
 
         public PropertiesController(IPropertyAppService propertyAppService, IPropertyImageAppService propertyImageAppService)
@@ -144,6 +144,7 @@ namespace Million.PropertyManagement.Api.Controllers
 
         [HttpPut("{propertyId}")]
         [Authorize]
+        [SwaggerRequestExample(typeof(PropertyUpdateDto), typeof(UpdatePropertyDtoExample))]
         public async Task<IActionResult> UpdateProperty(int propertyId, PropertyUpdateDto updateDto)
         {
             var result = await _propertyAppService.UpdatePropertyAsync(propertyId, updateDto);

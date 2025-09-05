@@ -16,4 +16,8 @@
     <ProjectReference Include="..\Million.PropertyManagement.Infrastructure\Million.PropertyManagement.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Notifications\" />
+  </ItemGroup>
+
 </Project>

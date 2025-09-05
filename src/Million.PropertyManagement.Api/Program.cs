@@ -101,6 +101,7 @@ namespace Million.PropertyManagement.Api
             builder.Services.AddSwaggerExamplesFromAssemblyOf<CreatePropertyDtoExample>();
             builder.Services.AddSwaggerExamplesFromAssemblyOf<CreatePropertyResponseDtoExample>();
             builder.Services.AddSwaggerExamplesFromAssemblyOf<PropertyFilterDtoExample>();
+            builder.Services.AddSwaggerExamplesFromAssemblyOf<UpdatePropertyDtoExample>();
 
             // Authorization
             var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtSettings:SecretKey"]);
